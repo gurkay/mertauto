@@ -1,0 +1,20 @@
+# Base image
+FROM node:18
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm install
+
+# For development mode - we will mount source code as volume
+# No need to copy or build in Dockerfile
+
+# Expose the application port
+EXPOSE 3000
+
+# Start the application in development mode
+CMD ["npm", "run", "dev"]
