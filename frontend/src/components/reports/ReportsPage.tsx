@@ -18,7 +18,7 @@ interface IProps {
     arac?: AracContent;
     parcaToplamFiyat: number;
     iscilikToplamFiyat: number;
-    router: any;
+    router?: any;
 }
 
 export default function ReportsPage(props: IProps) {
