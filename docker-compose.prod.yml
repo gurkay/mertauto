@@ -70,8 +70,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
-          memory: "250M"
+          cpus: "0.5"
+          memory: "1G"
+        reservations:
+          memory: "512M"
     container_name: nextjs-frontend
     ports:
       - "3000:3000"
