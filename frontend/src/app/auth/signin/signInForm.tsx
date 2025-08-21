@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { ApiUrlConsts } from "@/constants/ApiUrlConsts";
 
 export default function SignInForm() {
   const [email, setEmail] = useState("");
@@ -37,8 +38,9 @@ export default function SignInForm() {
       toast.success("Authentication successful. Fetching profile...");
 
       try {
-        const profileResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/signin`, { email, password } );
+        //const profileResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signin`, { email, password } );
+        const profileResponse = await axios.post(ApiUrlConsts.AUTH_SIGNIN, { email, password } );
+
         console.log("SignInForm: Received profile data:", profileResponse);
 
         if (profileResponse.status === 200 && profileResponse.data?.accessToken) {
