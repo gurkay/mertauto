@@ -11,4 +11,5 @@ export const ApiUrlConsts = {
     STOK_GET_BY_ID: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/stoklar/",
     ARAC_DURUMU: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/parametreler/arac-durumlari",
     YAPILAN_ISLEMLER: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/parametreler/yapilan-islemler",
+    ARAC_GET_BY_ID: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/araclar/",
 }
