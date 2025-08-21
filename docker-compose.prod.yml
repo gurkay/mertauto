@@ -5,8 +5,11 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.5"
+          memory: "1G"
+        reservations:
           cpus: "0.2"
-          memory: "200M"
+          memory: "512M"
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootroot
