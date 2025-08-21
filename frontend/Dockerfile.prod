@@ -1,5 +1,5 @@
-# Base image
-FROM node:18
+# Base image - Alpine kullanarak daha az memory kullanalım
+FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package.json package-lock.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies including sharp for production
+RUN npm ci --only=production && npm install sharp
 
 # Copy the rest of the application code
 COPY . .
@@ -16,8 +16,17 @@ COPY . .
 # Build the application
 RUN npm run build
 
+# Remove dev dependencies and unnecessary files to save memory
+RUN npm prune --production && \
+    rm -rf .next/cache && \
+    rm -rf node_modules/.cache
+
 # Expose the application port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Start the application with memory optimization
+CMD ["node", "--max-old-space-size=512", "node_modules/.bin/next", "start"]
