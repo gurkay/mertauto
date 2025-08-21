@@ -2,11 +2,11 @@ version: '3.10'
 services:
   mysql:
     image: mysql:8.0.33
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.3"
-    #       memory: "1G"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "200M"
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: rootroot
@@ -42,11 +42,11 @@ services:
     build: 
       context: ./backend
       dockerfile: Dockerfile.prod
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.4"
-    #       memory: "1G"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.3"
+          memory: "300M"
     container_name: spring-backend
     ports:
       - "8080:8080"
@@ -64,11 +64,11 @@ services:
     build: 
       context: ./frontend
       dockerfile: Dockerfile.prod
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: "0.3"
-    #       memory: "1G"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "250M"
     container_name: nextjs-frontend
     ports:
       - "3000:3000"
@@ -83,6 +83,11 @@ services:
       - app-network
 
   nginx:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: "100M"
     image: nginx:stable
     container_name: nginx-prod
     ports:
