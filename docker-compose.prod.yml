@@ -40,7 +40,7 @@ services:
 
   backend:
     build: 
-      context: ./frontend
+      context: ./backend
       dockerfile: Dockerfile.prod
     # deploy:
     #   resources:
