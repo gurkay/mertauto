@@ -40,23 +40,24 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          // Docker ortamında doğru URL'yi kullan
+          // Production ortamında doğru URL'yi kullan
           let apiUrl;
           if (typeof window === 'undefined') {
-            // Server-side rendering durumunda
-            apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+            // Server-side rendering durumunda (Docker içinde)
+            if (process.env.NODE_ENV === 'production') {
+              apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://spring-backend:8080';
+            } else {
+              apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+            }
             console.log('[Auth] Server-side giriş URL yapısı kullanılıyor');
           } else {
             // Client-side rendering durumunda
-            apiUrl = process.env.NEXT_PUBLIC_API_URL;
+            apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mertautogarage.com';
             console.log('[Auth] Client-side giriş URL yapısı kullanılıyor');
           }
           
-          if (!apiUrl) {
-            apiUrl = 'https://mertautogarage.com';
-          }
-          
           console.log('[Auth] Kullanılan API URL:', apiUrl);
+          console.log('[Auth] NODE_ENV:', process.env.NODE_ENV);
           
           // Direk olarak signin endpoint'ine istek yap
           const signinUrl = `${apiUrl}/api/auth/signin`;
@@ -156,6 +157,17 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 gün
+  },
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
   },
   debug: true,
 }

@@ -1,82 +1,134 @@
 "use client";
-import { signIn } from "next-auth/react";
-import axios from "axios";
+import { signIn, SignInResponse } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-import { ApiUrlConsts } from "@/constants/ApiUrlConsts";
+
+interface FormData {
+  email: string;
+  password: string;
+}
+
+interface FormErrors {
+  email?: string;
+  password?: string;
+  general?: string;
+}
 
 export default function SignInForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState<FormData>({
+    email: "",
+    password: ""
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  async function handleSubmit(event: React.FormEvent) {
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.email) {
+      newErrors.email = "Email adresi gereklidir";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Geçerli bir email adresi giriniz";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Şifre gereklidir";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Şifre en az 6 karakter olmalıdır";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleSignInError = (error: string | null | undefined): void => {
+    let message = "Giriş başarısız oldu";
+    
+    switch (error) {
+      case "CredentialsSignin":
+        message = "Email veya şifre hatalı";
+        break;
+      case "Configuration":
+        message = "Sistem konfigürasyon hatası";
+        break;
+      case "AccessDenied":
+        message = "Erişim engellendi";
+        break;
+      case "Verification":
+        message = "Doğrulama hatası";
+        break;
+      default:
+        message = error || "Bilinmeyen bir hata oluştu";
+    }
+    
+    setErrors({ general: message });
+    toast.error(message);
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
-    console.log("SignInForm: Attempting login via NextAuth signIn...");
+    setErrors({});
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: true,
-        callbackUrl: '/dashboard',
+      const result: SignInResponse | undefined = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
       });
 
-      console.log("SignInForm: NextAuth signIn result:", result);
-
-      if (!result?.ok) {
-        console.error("SignInForm: NextAuth signIn failed:", result?.error);
-        toast.error(result?.error || "Invalid credentials");
-        setIsLoading(false);
+      if (!result) {
+        setErrors({ general: "Giriş işlemi başlatılamadı" });
+        toast.error("Giriş işlemi başlatılamadı");
         return;
       }
 
-      console.log("SignInForm: NextAuth signIn successful. Fetching user data + token...");
-      toast.success("Authentication successful. Fetching profile...");
-
-      try {
-        //const profileResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signin`, { email, password } );
-        const profileResponse = await axios.post(ApiUrlConsts.AUTH_SIGNIN, { email, password } );
-
-        console.log("SignInForm: Received profile data:", profileResponse);
-
-        if (profileResponse.status === 200 && profileResponse.data?.accessToken) {
-          const { accessToken, ...userData } = profileResponse.data;
-          console.log("SignInForm: Saving token and user data to localStorage.");
-          localStorage.setItem('token', accessToken);
-          localStorage.setItem('user', JSON.stringify(userData));
-          window.dispatchEvent(new Event('storage'));
-
-          toast.success("Login successful!");
-          console.log("SignInForm: Redirecting to dashboard...");
-          window.location.href = '/dashboard';
-
-        } else {
-          console.error("SignInForm: Failed to fetch profile or token missing.", profileResponse);
-          toast.error("Failed to retrieve user profile after login.");
-        }
-      } catch (profileError: any) {
-        console.error("SignInForm: Error fetching profile:", profileError.response || profileError.message);
-        toast.error("Error fetching user profile after login.");
+      if (!result.ok) {
+        handleSignInError(result.error);
+        return;
       }
 
+      // Success
+      toast.success("Giriş başarılı! Yönlendiriliyorsunuz...");
+      
+      // Use Next.js router for navigation instead of window.location
+      router.push('/dashboard');
+      
     } catch (error) {
-      console.error('SignInForm: Unexpected error during signIn process:', error);
-      toast.error("An unexpected error occurred during sign in");
+      console.error('SignIn error:', error);
+      setErrors({ general: "Beklenmeyen bir hata oluştu" });
+      toast.error("Beklenmeyen bir hata oluştu");
     } finally {
-      if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/dashboard')) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="container mx-auto max-w-md p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Giriş Yap</h1>
+      
+      {errors.general && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+          {errors.general}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <div>
@@ -87,16 +139,24 @@ export default function SignInForm() {
               Email
             </label>
             <input
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black transition-colors ${
+                errors.email 
+                  ? 'border-red-500 bg-red-50' 
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
               type="email"
               name="email"
               id="email"
               placeholder="E-postanızı giriniz"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              disabled={isLoading}
             />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            )}
           </div>
+          
           <div>
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
@@ -105,19 +165,27 @@ export default function SignInForm() {
               Şifre
             </label>
             <input
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black transition-colors ${
+                errors.password 
+                  ? 'border-red-500 bg-red-50' 
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
               type="password"
               name="password"
               id="password"
               placeholder="Şifrenizi giriniz"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              disabled={isLoading}
             />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            )}
           </div>
         </div>
+        
         <button
-          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full mt-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
           type="submit"
           disabled={isLoading}
         >
@@ -131,12 +199,14 @@ export default function SignInForm() {
           )}
         </button>
       </form>
+      
       <ToastContainer
         position="top-right"
         autoClose={3000}
         hideProgressBar={false}
         closeOnClick
         pauseOnHover
+        toastClassName="text-sm"
       />
     </div>
   );

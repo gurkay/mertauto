@@ -6,11 +6,12 @@ export function middleware(req: NextRequest, event: NextFetchEvent) {
   try {
     console.log("middleware çalıştı");
     console.log("req.cookies", req.cookies);
-    const token = req.cookies.get("next-auth.session-token") === undefined 
+    const token = process.env.NODE_ENV === 'production' 
                   ? req.cookies.get("__Secure-next-auth.session-token")
                   : req.cookies.get("next-auth.session-token");
 
     console.log("token", token);
+    console.log("NODE_ENV", process.env.NODE_ENV);
 
     // Authentication failed
     if (!token?.value) {
