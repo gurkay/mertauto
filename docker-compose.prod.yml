@@ -82,6 +82,8 @@ services:
       - NEXT_PUBLIC_API_URL=https://mertautogarage.com
       - NEXTAUTH_URL=https://mertautogarage.com
       - NEXTAUTH_SECRET=NQOSd8J/wnueoxrzwc9BzoSfxvn5vvT9d+pGowghpUA=
+      - NODE_ENV=production
+      - NEXTAUTH_URL_INTERNAL=http://nextjs-frontend:3000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
