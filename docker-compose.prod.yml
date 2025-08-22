@@ -82,6 +82,12 @@ services:
       - NEXT_PUBLIC_API_URL=https://mertautogarage.com
       - NEXTAUTH_URL=https://mertautogarage.com
       - NEXTAUTH_SECRET=NQOSd8J/wnueoxrzwc9BzoSfxvn5vvT9d+pGowghpUA=
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s    
     depends_on:
       - backend
     networks:
@@ -105,8 +111,10 @@ services:
       - ./certbot/www:/var/www/certbot
       - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
     networks: 
       - app-network
     restart: unless-stopped
