@@ -23,6 +23,7 @@ export default function SignInForm() {
         email,
         password,
         redirect: false,
+        callbackUrl: '/dashboard',
       });
 
       console.log("SignInForm: NextAuth signIn result:", result);
@@ -37,31 +38,31 @@ export default function SignInForm() {
       console.log("SignInForm: NextAuth signIn successful. Fetching user data + token...");
       toast.success("Authentication successful. Fetching profile...");
 
-      try {
-        //const profileResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signin`, { email, password } );
-        const profileResponse = await axios.post(ApiUrlConsts.AUTH_SIGNIN, { email, password } );
+      // try {
+      //   //const profileResponse = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signin`, { email, password } );
+      //   const profileResponse = await axios.post(ApiUrlConsts.AUTH_SIGNIN, { email, password } );
 
-        console.log("SignInForm: Received profile data:", profileResponse);
+      //   console.log("SignInForm: Received profile data:", profileResponse);
 
-        if (profileResponse.status === 200 && profileResponse.data?.accessToken) {
-          const { accessToken, ...userData } = profileResponse.data;
-          console.log("SignInForm: Saving token and user data to localStorage.");
-          localStorage.setItem('token', accessToken);
-          localStorage.setItem('user', JSON.stringify(userData));
-          window.dispatchEvent(new Event('storage'));
+      //   if (profileResponse.status === 200 && profileResponse.data?.accessToken) {
+      //     const { accessToken, ...userData } = profileResponse.data;
+      //     console.log("SignInForm: Saving token and user data to localStorage.");
+      //     localStorage.setItem('token', accessToken);
+      //     localStorage.setItem('user', JSON.stringify(userData));
+      //     window.dispatchEvent(new Event('storage'));
 
-          toast.success("Login successful!");
-          console.log("SignInForm: Redirecting to dashboard...");
-          window.location.href = '/dashboard';
+      //     toast.success("Login successful!");
+      //     console.log("SignInForm: Redirecting to dashboard...");
+      //     window.location.href = '/dashboard';
 
-        } else {
-          console.error("SignInForm: Failed to fetch profile or token missing.", profileResponse);
-          toast.error("Failed to retrieve user profile after login.");
-        }
-      } catch (profileError: any) {
-        console.error("SignInForm: Error fetching profile:", profileError.response || profileError.message);
-        toast.error("Error fetching user profile after login.");
-      }
+      //   } else {
+      //     console.error("SignInForm: Failed to fetch profile or token missing.", profileResponse);
+      //     toast.error("Failed to retrieve user profile after login.");
+      //   }
+      // } catch (profileError: any) {
+      //   console.error("SignInForm: Error fetching profile:", profileError.response || profileError.message);
+      //   toast.error("Error fetching user profile after login.");
+      // }
 
     } catch (error) {
       console.error('SignInForm: Unexpected error during signIn process:', error);
