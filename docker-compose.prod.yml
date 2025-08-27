@@ -90,7 +90,8 @@ services:
       retries: 3
       start_period: 40s    
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -113,8 +114,6 @@ services:
       - /etc/letsencrypt:/etc/letsencrypt
     depends_on:
       frontend:
-        condition: service_healthy
-      backend:
         condition: service_healthy
     networks: 
       - app-network
