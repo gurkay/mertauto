@@ -1,28 +1,8 @@
+import { GetAraclarParams, ServiceResult } from "@/interfaces/IRedux";
 import HttpService from "./HttpService";
 import { AracContent, AraclarRootObject } from "@/types/MyTypes.d";
 
-// Types for API parameters and responses
-interface GetAraclarParams {
-    pageNum: number;
-    sortField?: string;
-    sortDir?: 'asc' | 'desc';
-    keyword?: string;
-}
 
-interface ApiResponse<T> {
-    data: T;
-    message?: string;
-    success?: boolean;
-}
-
-interface ServiceResult<T> {
-    success: boolean;
-    data?: T;
-    error?: {
-        message: string;
-        status?: number;
-    };
-}
 
 class AraclarService {
     private static readonly BASE_PATH = '/api/araclar';
