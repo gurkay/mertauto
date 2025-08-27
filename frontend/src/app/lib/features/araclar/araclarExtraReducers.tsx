@@ -1,5 +1,6 @@
 import { StatusConsts } from "@/constants/StatusConsts";
-import { AraclarRootObject, TAraclarInitialState } from "@/types/MyTypes.d";
+import { AraclarRootObject, TAraclarInitialState, AracContent } from "@/types/MyTypes.d";
+import { ServiceResult } from "@/interfaces/IRedux";
 import { ActionReducerMapBuilder, PayloadAction } from "@reduxjs/toolkit";
 import { aracEkle, aracGetir, aracGuncelle, aracSil, getAraclar } from "./araclarCreateAsyncThunk";
 
@@ -14,10 +15,15 @@ export const araclarExtraReducers = {
 
         });
     
-        builder.addCase(getAraclar.fulfilled, (state, action: PayloadAction<AraclarRootObject>) => {
+        builder.addCase(getAraclar.fulfilled, (state, action: PayloadAction<ServiceResult<AraclarRootObject>>) => {
             state.loading = false;
-            state.araclar = action.payload;
-            state.status = StatusConsts.SUCCESS;
+            if (action.payload.success && action.payload.data) {
+                state.araclar = action.payload.data;
+                state.status = StatusConsts.SUCCESS;
+            } else {
+                state.status = StatusConsts.ERROR;
+                state.responseMessage = action.payload.error?.message || 'Araçlar yüklenirken hata oluştu';
+            }
         });
     
         builder.addCase(getAraclar.rejected, (state) => {
@@ -32,10 +38,16 @@ export const araclarExtraReducers = {
             state.status = StatusConsts.LOADING;
         });
 
-        builder.addCase(aracEkle.fulfilled, (state, action: PayloadAction<TAraclarInitialState>) => {
+        builder.addCase(aracEkle.fulfilled, (state, action: PayloadAction<ServiceResult<AracContent>>) => {
             state.loading = false;
-            state.arac = action.payload.arac;
-            state.status = StatusConsts.SUCCESS;
+            if (action.payload.success && action.payload.data) {
+                state.arac = action.payload.data;
+                state.status = StatusConsts.SUCCESS;
+                state.responseMessage = 'Araç başarıyla eklendi';
+            } else {
+                state.status = StatusConsts.ERROR;
+                state.responseMessage = action.payload.error?.message || 'Araç eklenirken hata oluştu';
+            }
         });
 
         builder.addCase(aracEkle.rejected, (state) => {
@@ -50,10 +62,16 @@ export const araclarExtraReducers = {
             state.status = StatusConsts.LOADING;
         });
 
-        builder.addCase(aracGuncelle.fulfilled, (state, action: PayloadAction<TAraclarInitialState>) => {
+        builder.addCase(aracGuncelle.fulfilled, (state, action: PayloadAction<ServiceResult<AracContent>>) => {
             state.loading = false;
-            state.arac = action.payload.arac;
-            state.status = StatusConsts.SUCCESS;
+            if (action.payload.success && action.payload.data) {
+                state.arac = action.payload.data;
+                state.status = StatusConsts.SUCCESS;
+                state.responseMessage = 'Araç başarıyla güncellendi';
+            } else {
+                state.status = StatusConsts.ERROR;
+                state.responseMessage = action.payload.error?.message || 'Araç güncellenirken hata oluştu';
+            }
         });
 
         builder.addCase(aracGuncelle.rejected, (state) => {
@@ -68,10 +86,16 @@ export const araclarExtraReducers = {
             state.status = StatusConsts.LOADING;
         });
 
-        builder.addCase(aracSil.fulfilled, (state, action: PayloadAction<TAraclarInitialState>) => {
+        builder.addCase(aracSil.fulfilled, (state, action: PayloadAction<ServiceResult<void>>) => {
             state.loading = false;
-            state.arac = action.payload.arac;
-            state.status = StatusConsts.SUCCESS;
+            if (action.payload.success) {
+                state.arac = null;
+                state.status = StatusConsts.SUCCESS;
+                state.responseMessage = 'Araç başarıyla silindi';
+            } else {
+                state.status = StatusConsts.ERROR;
+                state.responseMessage = action.payload.error?.message || 'Araç silinirken hata oluştu';
+            }
         });
 
         builder.addCase(aracSil.rejected, (state) => {
@@ -86,10 +110,15 @@ export const araclarExtraReducers = {
             state.status = StatusConsts.LOADING;
         });
         
-        builder.addCase(aracGetir.fulfilled, (state, action: PayloadAction<TAraclarInitialState>) => {
+        builder.addCase(aracGetir.fulfilled, (state, action: PayloadAction<ServiceResult<AracContent>>) => {
             state.loading = false;
-            state.arac = action.payload.arac;
-            state.status = StatusConsts.SUCCESS;
+            if (action.payload.success && action.payload.data) {
+                state.arac = action.payload.data;
+                state.status = StatusConsts.SUCCESS;
+            } else {
+                state.status = StatusConsts.ERROR;
+                state.responseMessage = action.payload.error?.message || 'Araç bilgileri alınırken hata oluştu';
+            }
         });
         
         builder.addCase(aracGetir.rejected, (state) => {
