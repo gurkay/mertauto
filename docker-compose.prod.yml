@@ -137,7 +137,7 @@ services:
         max-file: "3"
 
   nginx:
-    image: nginx:1.24-alpine
+    image: nginx:1.26-alpine
     container_name: nginx-prod
     restart: unless-stopped
     ports:
