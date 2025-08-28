@@ -1,29 +1,25 @@
 services:
   mysql:
     image: mysql:8.0.33
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: "1G"
-        reservations:
-          cpus: "0.2"
-          memory: "512M"
     container_name: mysql
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootroot
-      MYSQL_DATABASE: mertautodb
-      MYSQL_USER: mertauto
-      MYSQL_PASSWORD: mertauto123456
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mertautodb}
+      MYSQL_USER: ${MYSQL_USER:-mertauto}
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
       MYSQL_MAX_ALLOWED_PACKET: 128M
-      TZ: UTC
+      TZ: Europe/Istanbul
+    secrets:
+      - mysql_root_password
+      - mysql_password
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"  # Bind sadece localhost'a
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./mysql-init/init.sql:/docker-entrypoint-initdb.d/1-init.sql
-      - ./mysql-init/schema.sql:/docker-entrypoint-initdb.d/2-schema.sql
-      - ./mysql-init/data.sql:/docker-entrypoint-initdb.d/3-data.sql
+      - ./mysql-init/init.sql:/docker-entrypoint-initdb.d/1-init.sql:ro
+      - ./mysql-init/schema.sql:/docker-entrypoint-initdb.d/2-schema.sql:ro
+      - ./mysql-init/data.sql:/docker-entrypoint-initdb.d/3-data.sql:ro
       - ./mysql-init/mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
     networks:
       - app-network
@@ -34,106 +30,186 @@ services:
       --max_allowed_packet=128M
       --bind-address=0.0.0.0
       --secure-file-priv=/var/lib/mysql-files
+      --innodb-buffer-pool-size=512M
+      --max-connections=200
+      --slow-query-log=1
+      --slow-query-log-file=/var/log/mysql/slow.log
+      --long-query-time=2
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "mertauto", "-pmertauto123456"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile.prod
-    deploy:
-      resources:
-        limits:
-          cpus: "0.3"
-          memory: "300M"
-    container_name: spring-backend
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mertautodb?allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=mertauto
-      - SPRING_DATASOURCE_PASSWORD=mertauto123456
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - app-network
-
-  frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile.prod
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER:-mertauto}", "-p${MYSQL_PASSWORD:-mertauto123456}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: "1G"
         reservations:
+          cpus: "0.2"
           memory: "512M"
-    container_name: nextjs-frontend
-    ports:
-      - "3000:3000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: spring-backend
+    restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_BACKEND_API_URL=http://spring-backend:8080
-      - NEXT_PUBLIC_API_URL=https://mertautogarage.com
-      - NEXTAUTH_URL=https://mertautogarage.com
-      - NEXTAUTH_SECRET=NQOSd8J/wnueoxrzwc9BzoSfxvn5vvT9d+pGowghpUA=
-      - NODE_ENV=production
-      - NEXTAUTH_URL_INTERNAL=http://nextjs-frontend:3000
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-mertautodb}?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Europe/Istanbul
+      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER:-mertauto}
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-mertauto123456}
+      - JAVA_OPTS=-Xms128m -Xmx256m -XX:+UseG1GC -XX:+UseStringDeduplication
+      - TZ=Europe/Istanbul
+    expose:
+      - "8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s    
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "400M"
+        reservations:
+          cpus: "0.2"
+          memory: "200M"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: nextjs-frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_BACKEND_API_URL=http://spring-backend:8080
+      - NEXT_PUBLIC_API_URL=${FRONTEND_URL:-https://mertautogarage.com}
+      - NEXTAUTH_URL=${FRONTEND_URL:-https://mertautogarage.com}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-NQOSd8J/wnueoxrzwc9BzoSfxvn5vvT9d+pGowghpUA=}
+      - NODE_ENV=production
+      - NEXTAUTH_URL_INTERNAL=http://nextjs-frontend:3000
+      - TZ=Europe/Istanbul
+    expose:
+      - "3000"
     depends_on:
       backend:
         condition: service_healthy
     networks:
       - app-network
-
-  nginx:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       resources:
         limits:
-          cpus: "0.1"
-          memory: "100M"
-    image: nginx:stable
+          cpus: "0.5"
+          memory: "800M"
+        reservations:
+          cpus: "0.2"
+          memory: "400M"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nginx:
+    image: nginx:1.24-alpine
     container_name: nginx-prod
+    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/logs:/var/log/nginx
-      - ./certbot/www:/var/www/certbot
-      - /etc/letsencrypt:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       frontend:
         condition: service_healthy
     networks: 
       - app-network
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "128M"
+        reservations:
+          cpus: "0.1"
+          memory: "64M"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   certbot:
-    image: certbot/certbot
+    image: certbot/certbot:latest
+    container_name: certbot
     volumes:
       - ./certbot/www:/var/www/certbot
       - /etc/letsencrypt:/etc/letsencrypt
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email gurkay.basyigit@gmail.com -d mertautogarage.com -d www.mertautogarage.com --agree-tos
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${CERTBOT_EMAIL:-gurkay.basyigit@gmail.com} -d ${DOMAIN:-mertautogarage.com} -d www.${DOMAIN:-mertautogarage.com} --agree-tos
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: "64M"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+# Docker Secrets for sensitive data
+secrets:
+  mysql_root_password:
+    file: ./secrets/mysql_root_password.txt
+  mysql_password:
+    file: ./secrets/mysql_password.txt
 
 volumes:
   mysql_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/mysql-data
 
 networks:
   app-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
