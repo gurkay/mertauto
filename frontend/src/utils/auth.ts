@@ -47,12 +47,12 @@ export const authOptions: NextAuthOptions = {
             if (process.env.NODE_ENV === 'production') {
               apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://spring-backend:8080';
             } else {
-              apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+              apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8080';
             }
             console.log('[Auth] Server-side giriş URL yapısı kullanılıyor');
           } else {
             // Client-side rendering durumunda
-            apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mertautogarage.com';
+            apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || '';
             console.log('[Auth] Client-side giriş URL yapısı kullanılıyor');
           }
           

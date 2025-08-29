@@ -4,10 +4,10 @@ export async function apiAuthSignUp(credentials: {
   password: string;
 }) {
   try {
-    console.log(`backendSignUp:::${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`);
+    console.log(`backendSignUp:::${process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`);
     console.log("credentials", credentials);
-    // TODO: backend url'i değiştir container-to-container için NEXT_PUBLIC_BACKEND_API_URL kullan
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`, {
+    // Using NEXT_PUBLIC_BACKEND_API_URL for backend communication
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL}/api/auth/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
