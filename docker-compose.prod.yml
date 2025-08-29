@@ -102,7 +102,7 @@ services:
     container_name: nextjs-frontend
     restart: unless-stopped
     environment:
-      - NEXT_PUBLIC_BACKEND_API_URL=http://spring-backend:8080
+      - NEXT_PUBLIC_BACKEND_API_URL=${FRONTEND_URL:-https://mertautogarage.com}
       - NEXT_PUBLIC_API_URL=${FRONTEND_URL:-https://mertautogarage.com}
       - NEXTAUTH_URL=${FRONTEND_URL:-https://mertautogarage.com}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-NQOSd8J/wnueoxrzwc9BzoSfxvn5vvT9d+pGowghpUA=}
