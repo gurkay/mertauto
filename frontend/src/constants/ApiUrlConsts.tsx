@@ -1,16 +1,26 @@
 
+// Use relative paths for production (nginx proxy) or fallback to environment variable
+const getApiUrl = (path: string) => {
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+        // Client-side production: use relative paths (nginx proxy)
+        return path;
+    }
+    // Server-side or development: use environment variable
+    return (process.env.NEXT_PUBLIC_BACKEND_API_URL || '') + path;
+};
+
 export const ApiUrlConsts = {
-    ARACLAR: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/araclar/",
-    USERS: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/users",
-    SANZIMANLAR: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/parametreler/sanzimanlar",
-    MARKALAR: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/parametreler/markalar",
-    MODELLE: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/parametreler/tum-modeller",
-    MOTOR_HACIMLERI: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/parametreler/motor-hacimleri",
-    YAKIT_TURU: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/parametreler/yakit-turleri",
-    IS_EMIRLERI: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/isEmirleri/",
-    STOK_GET_BY_ID: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/stoklar/",
-    ARAC_DURUMU: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/parametreler/arac-durumlari",
-    YAPILAN_ISLEMLER: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/parametreler/yapilan-islemler",
-    ARAC_GET_BY_ID: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/araclar/",
-    AUTH_SIGNIN: process.env.NEXT_PUBLIC_BACKEND_API_URL + "/api/auth/signin",
+    ARACLAR: getApiUrl("/api/araclar/"),
+    USERS: getApiUrl("/api/users"),
+    SANZIMANLAR: getApiUrl("/api/parametreler/sanzimanlar"),
+    MARKALAR: getApiUrl("/api/parametreler/markalar"),
+    MODELLE: getApiUrl("/api/parametreler/tum-modeller"),
+    MOTOR_HACIMLERI: getApiUrl("/api/parametreler/motor-hacimleri"),
+    YAKIT_TURU: getApiUrl("/api/parametreler/yakit-turleri"),
+    IS_EMIRLERI: getApiUrl("/api/isEmirleri/"),
+    STOK_GET_BY_ID: getApiUrl("/api/stoklar/"),
+    ARAC_DURUMU: getApiUrl("/api/parametreler/arac-durumlari"),
+    YAPILAN_ISLEMLER: getApiUrl("/api/parametreler/yapilan-islemler"),
+    ARAC_GET_BY_ID: getApiUrl("/api/araclar/"),
+    AUTH_SIGNIN: getApiUrl("/api/auth/signin"),
 }

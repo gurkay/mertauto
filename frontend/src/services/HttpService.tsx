@@ -29,8 +29,18 @@ class HttpService {
             }
         };
 
+        // Determine base URL: use relative paths in production client-side for nginx proxy
+        const getBaseUrl = () => {
+            if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+                // Client-side production: use relative paths (nginx proxy)
+                return '';
+            }
+            // Server-side or development: use environment variable
+            return process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+        };
+
         this.axiosInstance = axios.create({
-            baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+            baseURL: getBaseUrl(),
             timeout: this.timeoutMs,
             headers: {
                 'Content-Type': 'application/json',
