@@ -14,12 +14,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.template.backend.entities.Arac;
 import com.template.backend.interfaces.IAracService;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @Controller
 @RequestMapping("/api/araclar")
 public class AracController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AracController.class);
     private final IAracService<Arac> aracService;
 
     public AracController(IAracService<Arac> aracService) {
@@ -33,13 +36,26 @@ public class AracController {
         @RequestParam("sortDir") String sortDir,
         @RequestParam("keyword") String keyword) {
         
-        if (sortField == null) {
-            sortField = "createdAt";
-            sortDir = "desc";
+        logger.info("=== ARACLAR PAGE REQUEST START ===");
+        logger.info("PageNum: {}, SortField: {}, SortDir: {}, Keyword: '{}'", pageNum, sortField, sortDir, keyword);
+        
+        try {
+            if (sortField == null) {
+                sortField = "createdAt";
+                sortDir = "desc";
+            }
+            
+            Page<Arac> pageArac = aracService.findAllPagination(pageNum, sortField, sortDir, keyword);
+            logger.info("Found {} araclar, Total Pages: {}", pageArac.getTotalElements(), pageArac.getTotalPages());
+            logger.info("=== ARACLAR PAGE REQUEST SUCCESS ===");
+            
+            return ResponseEntity.ok(pageArac);
+            
+        } catch (Exception e) {
+            logger.error("=== ARACLAR PAGE REQUEST FAILED ===");
+            logger.error("Error: {}", e.getMessage(), e);
+            throw e;
         }
-        Page<Arac> pageArac = aracService.findAllPagination(pageNum, sortField, sortDir, keyword);
-
-        return ResponseEntity.ok(pageArac);
     }
     
     @PostMapping
