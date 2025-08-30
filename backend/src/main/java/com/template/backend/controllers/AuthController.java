@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,22 +41,37 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        logger.info("authenticateUser");
-        String jwt = authService.authenticate(loginRequest);
-        logger.info("authenticateUser:::jwt:::" + jwt);
-        System.out.println("authenticateUser:::jwt:::" + jwt);
-        UserDetailsImpl userDetails = (UserDetailsImpl) authService.getUserDetails(loginRequest.getEmail());
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(new JwtResponse(
-                jwt,
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                roles
-        ));
+        logger.info("=== SIGNIN REQUEST START ===");
+        logger.info("Email: {}", loginRequest.getEmail());
+        logger.info("Request from: {}", org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes());
+        
+        try {
+            String jwt = authService.authenticate(loginRequest);
+            logger.info("Authentication successful, JWT generated");
+            logger.info("JWT: {}", jwt.substring(0, Math.min(jwt.length(), 50)) + "...");
+            
+            UserDetailsImpl userDetails = (UserDetailsImpl) authService.getUserDetails(loginRequest.getEmail());
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
+                    
+            logger.info("User roles: {}", roles);
+            
+            JwtResponse response = new JwtResponse(jwt,
+                    userDetails.getId(),
+                    userDetails.getUsername(),
+                    userDetails.getEmail(),
+                    roles);
+                    
+            logger.info("=== SIGNIN REQUEST SUCCESS ===");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            logger.error("=== SIGNIN REQUEST FAILED ===");
+            logger.error("Error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new JwtResponse("", null, "", "", null));
+        }
     }
 
     @GetMapping("/profile")
