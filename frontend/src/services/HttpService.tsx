@@ -66,8 +66,16 @@ class HttpService {
                     
                     const token = sessionToken || localToken;
                     
+                    // Debug logging
+                    console.log('[HttpService] Session token:', sessionToken ? 'Present' : 'Not found');
+                    console.log('[HttpService] Local token:', localToken ? 'Present' : 'Not found');
+                    console.log('[HttpService] Using token:', token ? 'Yes' : 'No');
+                    
                     if (token) {
                         config.headers['Authorization'] = `Bearer ${token}`;
+                        console.log('[HttpService] Authorization header added');
+                    } else {
+                        console.warn('[HttpService] No token available for request to:', config.url);
                     }
 
                     this.logRequest(config);
