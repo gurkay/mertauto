@@ -45,11 +45,11 @@ export const authOptions: NextAuthOptions = {
           if (typeof window === 'undefined') {
             // Server-side rendering durumunda (Docker içinde)
             if (process.env.NODE_ENV === 'production') {
-              apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://spring-backend:8080';
+              apiUrl = 'http://spring-backend:8080'; // Direct container-to-container communication
             } else {
               apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8080';
             }
-            console.log('[Auth] Server-side giriş URL yapısı kullanılıyor');
+            console.log('[Auth] Server-side giriş URL yapısı kullanılıyor (Container-to-container)');
           } else {
             // Client-side rendering durumunda
             apiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || '';
