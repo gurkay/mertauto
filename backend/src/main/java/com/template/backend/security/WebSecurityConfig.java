@@ -63,7 +63,7 @@ public class WebSecurityConfig { // extends WebSecurityConfigurerAdapter {
             .requestMatchers("/api/auth/**", "/auth/callback/credentials", "/auth/error", "/auth/_log", "/api/auth/callback/credentials").permitAll()
             .requestMatchers("/auth/**").permitAll()
             .requestMatchers("/error").permitAll()
-            .requestMatchers("/api/araclar/**").permitAll() // Temporary debug - remove in production
+            .requestMatchers("/api/araclar/**").hasAnyRole("ADMIN", "MANAGER")
             .requestMatchers("/api/auth/profile").hasAnyRole("USER", "ADMIN", "MANAGER")
             .requestMatchers("/api/parametreler/**").hasAnyRole("USER", "ADMIN", "MANAGER")
             .requestMatchers("/api/stoklar/**").hasAnyRole("USER", "ADMIN", "MANAGER")

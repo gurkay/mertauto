@@ -19,10 +19,10 @@ public class CorsConfig {
         
         // Allowed origins
         List<String> allowedOrigins = new ArrayList<>();
-        allowedOrigins.add("http://ingilizcem.net");
-        allowedOrigins.add("https://ingilizcem.net");
-        allowedOrigins.add("http://www.ingilizcem.net");
-        allowedOrigins.add("https://www.ingilizcem.net");
+        allowedOrigins.add("https://mertautogarage.com");
+        allowedOrigins.add("https://www.mertautogarage.com");
+        allowedOrigins.add("http://mertautogarage.com");
+        allowedOrigins.add("http://www.mertautogarage.com");
         allowedOrigins.add("http://localhost:3000");
         allowedOrigins.add("http://localhost:8080");
         allowedOrigins.add("https://localhost:8080");
@@ -37,7 +37,18 @@ public class CorsConfig {
             "Authorization", 
             "Content-Type", 
             "X-Requested-With",
-            "Accept"
+            "Accept",
+            "Origin",
+            "Cache-Control",
+            "X-Forwarded-For",
+            "X-Real-IP"
+        ));
+        
+        // Exposed headers (frontend'in görebileceği header'lar)
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization",
+            "Content-Type",
+            "X-Total-Count"
         ));
         
         // Allow credentials
